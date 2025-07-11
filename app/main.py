@@ -18,7 +18,7 @@ def download_video():
     url = data.get('url')
 
     if not url or 'youtube.com' not in url:
-        return jsonify({'success': False, 'error': '无效的 YouTube 链接'}), 400
+        return jsonify({'success': False, 'error': '❌ 请输入有效的 YouTube 视频链接。'}), 400
 
     filename = f"video_{int(time.time())}.mp4"
     output_path = os.path.join(DOWNLOAD_DIR, filename)
@@ -26,14 +26,18 @@ def download_video():
     ydl_opts = {
         'format': 'best',
         'outtmpl': output_path,
+        'quiet': True,
+        'no_warnings': True,
     }
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([url])
+            info = ydl.extract_info(url, download=True)
+            if not info:
+                raise Exception("无法获取视频信息")
         return jsonify({'success': True, 'file': f"/download/{filename}"})
     except Exception as e:
-        return jsonify({'success': False, 'error': f'下载失败: {str(e)}'}), 500
+        return jsonify({'success': False, 'error': f'❌ 下载失败：{str(e)}'}), 500
 
 @app.route('/download/<filename>')
 def serve_file(filename):
