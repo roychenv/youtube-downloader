@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: youtube-downloader
+    env: node
+    plan: free
+    buildCommand: |
+      npm install
+      python3 -m pip install -U yt-dlp
+    startCommand: node server/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
