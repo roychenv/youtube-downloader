@@ -6,6 +6,7 @@
   <style>
     body { font-family: sans-serif; text-align: center; padding: 2rem; }
     input, button { padding: 10px; font-size: 1rem; width: 300px; margin: 10px; }
+    #loading { display: none; color: blue; margin-top: 20px; }
   </style>
 </head>
 <body>
@@ -13,23 +14,36 @@
   <input type="text" id="url" placeholder="输入 YouTube 链接">
   <br>
   <button onclick="download()">下载视频</button>
+
+  <div id="loading">⏳ 正在下载中，请稍候...</div>
   <div id="result" style="margin-top:20px;"></div>
 
   <script>
     async function download() {
       const url = document.getElementById('url').value.trim();
-      const res = await fetch('/api/download', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url })
-      });
-      const data = await res.json();
-      if (data.success) {
-        document.getElementById('result').innerHTML =
-          `<a href="${data.file}" download>🎬 点击下载视频</a>`;
-      } else {
-        document.getElementById('result').innerHTML =
-          `<p style="color:red;">❌ ${data.error}</p>`;
+      const loading = document.getElementById('loading');
+      const result = document.getElementById('result');
+
+      result.innerHTML = '';
+      loading.style.display = 'block';
+
+      try {
+        const res = await fetch('/api/download', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        });
+        const data = await res.json();
+        loading.style.display = 'none';
+
+        if (data.success) {
+          result.innerHTML = `<a href="${data.file}" download>🎬 点击这里下载视频</a>`;
+        } else {
+          result.innerHTML = `<p style="color:red;">${data.error}</p>`;
+        }
+      } catch (err) {
+        loading.style.display = 'none';
+        result.innerHTML = `<p style="color:red;">❌ 请求失败，请检查网络或服务器状态。</p>`;
       }
     }
   </script>
