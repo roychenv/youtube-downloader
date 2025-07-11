@@ -2,30 +2,46 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <title>YouTube 视频下载器</title>
+  <title>YouTube 视频下载器 & 播放器</title>
   <style>
     body { font-family: sans-serif; text-align: center; padding: 2rem; }
     input, button { padding: 10px; font-size: 1rem; width: 300px; margin: 10px; }
     #loading { display: none; color: blue; margin-top: 20px; }
+    iframe { margin-top: 20px; width: 560px; height: 315px; border: none; display: none; }
   </style>
 </head>
 <body>
-  <h2>YouTube 视频下载器</h2>
-  <input type="text" id="url" placeholder="输入 YouTube 链接">
+  <h2>YouTube 视频下载 & 播放</h2>
+  <input type="text" id="url" placeholder="粘贴 YouTube 视频链接">
   <br>
   <button onclick="download()">下载视频</button>
 
   <div id="loading">⏳ 正在下载中，请稍候...</div>
   <div id="result" style="margin-top:20px;"></div>
 
+  <iframe id="player" allowfullscreen></iframe>
+
   <script>
+    function extractVideoId(url) {
+      const match = url.match(/(?:v=|\/shorts\/|youtu\.be\/)([\w-]{11})/);
+      return match ? match[1] : null;
+    }
+
     async function download() {
       const url = document.getElementById('url').value.trim();
       const loading = document.getElementById('loading');
       const result = document.getElementById('result');
+      const player = document.getElementById('player');
 
       result.innerHTML = '';
+      player.style.display = 'none';
       loading.style.display = 'block';
+
+      const videoId = extractVideoId(url);
+      if (videoId) {
+        player.src = `https://www.youtube.com/embed/${videoId}`;
+        player.style.display = 'inline-block';
+      }
 
       try {
         const res = await fetch('/api/download', {
@@ -37,7 +53,7 @@
         loading.style.display = 'none';
 
         if (data.success) {
-          result.innerHTML = `<a href="${data.file}" download>🎬 点击这里下载视频</a>`;
+          result.innerHTML = `<a href="${data.file}" download>🎬 点击下载视频</a>`;
         } else {
           result.innerHTML = `<p style="color:red;">${data.error}</p>`;
         }
